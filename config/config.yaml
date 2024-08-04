@@ -25,7 +25,7 @@ cache:
 
 database:
   driver: "sqlite3"
-  connection: "dbs/main.db?_journal=WAL&_timeout=5000&_fk=true"
+  connection: "main.db?_journal=WAL&_timeout=5000&_fk=true"
   testConnection: ":memory:?_journal=WAL&_timeout=5000&_fk=true"
 
 tasks:

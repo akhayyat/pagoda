@@ -4,11 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/mikestefanello/backlite"
 	"io"
 	"log/slog"
 	"os"
-	"strings"
+	"path/filepath"
+	"strconv"
+
+	"github.com/mikestefanello/backlite"
 	"github.com/rs/zerolog"
 
 	entsql "entgo.io/ent/dialect/sql"
@@ -151,17 +153,7 @@ func (c *Container) initCache() {
 // initDatabase initializes the database
 func (c *Container) initDatabase() {
 	var err error
-	var connection string
-
-	switch c.Config.App.Environment {
-	case config.EnvTest:
-		// TODO: Drop/recreate the DB, if this isn't in memory?
-		connection = c.Config.Database.TestConnection
-	default:
-		connection = c.Config.Database.Connection
-	}
-
-	c.Database, err = openDB(c.Config.Database.Driver, connection)
+	c.Database, err = sql.Open(c.Config.Database.Driver, c.Config.Database.Connection)
 	if err != nil {
 		c.Logger.Panic().Err(err).Msg("failed to connect to database")
 	}
@@ -226,23 +218,4 @@ func (c *Container) initTasks() {
 	if err = c.Tasks.Install(); err != nil {
 		c.Logger.Panic().Err(err).Msg("failed to install task schema")
 	}
-}
-
-// openDB opens a database connection
-func openDB(driver, connection string) (*sql.DB, error) {
-	// Helper to automatically create the directories that the specified sqlite file
-	// should reside in, if one
-	if driver == "sqlite3" {
-		d := strings.Split(connection, "/")
-
-		if len(d) > 1 {
-			path := strings.Join(d[:len(d)-1], "/")
-
-			if err := os.MkdirAll(path, 0755); err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	return sql.Open(driver, connection)
 }
