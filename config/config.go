@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/spf13/viper"
 )
 
@@ -16,7 +17,7 @@ const (
 	StaticDir = "static"
 
 	// StaticPrefix stores the URL prefix used when serving static files
-	StaticPrefix = "files"
+	StaticPrefix = "static"
 )
 
 type environment string
@@ -78,7 +79,7 @@ type (
 
 	// AppConfig stores application configuration
 	AppConfig struct {
-		Name          string
+		Name          string `validate:"required"`
 		Environment   environment
 		EncryptionKey string
 		LogLevel      string
@@ -146,6 +147,11 @@ func GetConfig() (Config, error) {
 	}
 
 	if err := viper.Unmarshal(&c); err != nil {
+		return c, err
+	}
+
+	validate := validator.New()
+	if err := validate.Struct(&c); err != nil {
 		return c, err
 	}
 
