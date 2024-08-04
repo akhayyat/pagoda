@@ -1,9 +1,12 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
+	"github.com/mikestefanello/pagoda/ent"
 	"github.com/mikestefanello/pagoda/pkg/ctxext"
 	"github.com/mikestefanello/pagoda/pkg/page"
 	"github.com/mikestefanello/pagoda/pkg/services"
@@ -21,30 +24,45 @@ func (e *Error) Page(err error, ctx echo.Context) {
 
 	// Determine the error status code
 	code := http.StatusInternalServerError
-	if he, ok := err.(*echo.HTTPError); ok {
-		code = he.Code
-	}
-
-	// Log the error
-	logger := log.Ctx(ctx)
+	var httpError *echo.HTTPError
+	var notFoundError *ent.NotFoundError
 	switch {
-	case code >= 500:
-		logger.Error(err.Error())
-	case code >= 400:
-		logger.Warn(err.Error())
+	// case errors.Is(err, privacyrules.ErrDenyUnauthorized):
+	// 	code = http.StatusUnauthorized
+	// case errors.Is(err, privacyrules.ErrDenyForbidden):
+	// 	code = http.StatusForbidden
+	case errors.As(err, &httpError):
+		code = httpError.Code
+	case errors.As(err, &notFoundError):
+		code = http.StatusNotFound
 	}
 
-	// Render the error page
-	p := page.New(ctx)
-	p.Layout = templates.LayoutMain
-	p.Name = templates.PageError
-	p.Title = http.StatusText(code)
-	p.StatusCode = code
-	p.HTMX.Request.Enabled = false
+	// Send the response
+	page, ok := ctxext.IsPageRoute(ctx)
+	if (ok && !page) || (!ok &&
+		(strings.Contains(ctx.Request().Header.Get("Accept"), "json")) ||
+		(strings.Contains(ctx.Request().Header.Get("Content-Type"), "json"))) {
+		e.apiErrorHandler(ctx, err, code)
+	} else {
+		e.pageErrorHandler(ctx, code)
+	}
+}
 
-	if err = e.RenderPage(ctx, p); err != nil {
-		log.Ctx(ctx).Error("failed to render error page",
-			"error", err,
-		)
+func (e *Error) pageErrorHandler(ctx echo.Context, code int) {
+	page := page.New(ctx)
+	page.Title = http.StatusText(code)
+	page.Layout = templates.LayoutMain
+	page.Name = templates.PageError
+	page.StatusCode = code
+	page.HTMX.Request.Enabled = false
+
+	if err := e.RenderPage(ctx, page); err != nil {
+		ctxext.Logger(ctx).Error().Err(err).Msg("Error sending page error response")
+	}
+}
+
+func (e *Error) apiErrorHandler(ctx echo.Context, err error, code int) {
+	if err := ctx.JSON(code, err); err != nil {
+		ctxext.Logger(ctx).Error().Err(err).Msg("Error sending API error response")
 	}
 }
