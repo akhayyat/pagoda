@@ -47,14 +47,17 @@ type Container struct {
 	// ORM stores a client to the ORM
 	ORM *ent.Client
 
-	// Mail stores an email sending client
-	Mail *MailClient
+	// Clients for repository services
+	Users *UsersClient
 
-	// Auth stores an authentication client
-	Auth *AuthClient
+	// Auth stores an Ory authentication client. AuthClient is an interface, hence not a pointer
+	Auth *OryAuthClient
 
 	// TemplateRenderer stores a service to easily render and cache templates
 	TemplateRenderer *TemplateRenderer
+
+	// Mail stores an email sending client
+	Mail *MailClient
 
 	// Tasks stores the task client
 	Tasks *backlite.Client
@@ -70,6 +73,7 @@ func NewContainer() *Container {
 	c.initCache()
 	c.initDatabase()
 	c.initORM()
+	c.initUsers()
 	c.initAuth()
 	c.initTemplateRenderer()
 	c.initMail()
@@ -174,9 +178,13 @@ func (c *Container) initORM() {
 	}
 }
 
+func (c *Container) initUsers() {
+	c.Users = NewUsersClient(c.ORM)
+}
+
 // initAuth initializes the authentication client
 func (c *Container) initAuth() {
-	c.Auth = NewAuthClient(c.Config, c.ORM)
+	c.Auth = newOryAuthClient(c.Config, c.Users)
 }
 
 // initTemplateRenderer initializes the template renderer

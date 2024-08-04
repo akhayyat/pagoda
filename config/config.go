@@ -57,6 +57,7 @@ type (
 		App      AppConfig
 		Cache    CacheConfig
 		Database DatabaseConfig
+		Ory      OryConfig
 		Tasks    TasksConfig
 		Mail     MailConfig
 	}
@@ -82,11 +83,6 @@ type (
 		EncryptionKey string
 		LogLevel      string
 		Timeout       time.Duration
-		PasswordToken struct {
-			Expiration time.Duration
-			Length     int
-		}
-		EmailVerificationTokenExpiration time.Duration
 	}
 
 	// CacheConfig stores the cache configuration
@@ -103,6 +99,12 @@ type (
 		Driver         string
 		Connection     string
 		TestConnection string
+	}
+
+	// Ory Kratos configuration (identity & auth)
+	OryConfig struct {
+		URL     string
+		TestURL string
 	}
 
 	// TasksConfig stores the tasks configuration

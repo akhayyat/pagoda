@@ -2,13 +2,10 @@ package tests
 
 import (
 	"context"
-	"fmt"
-	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/mikestefanello/pagoda/ent"
 	"github.com/mikestefanello/pagoda/pkg/session"
@@ -64,11 +61,7 @@ func AssertHTTPErrorCode(t *testing.T, err error, code int) {
 
 // CreateUser creates a random user entity
 func CreateUser(orm *ent.Client) (*ent.User, error) {
-	seed := fmt.Sprintf("%d-%d", time.Now().UnixMilli(), rand.Intn(1000000))
 	return orm.User.
 		Create().
-		SetEmail(fmt.Sprintf("testuser-%s@localhost.localhost", seed)).
-		SetPassword("password").
-		SetName(fmt.Sprintf("Test User %s", seed)).
 		Save(context.Background())
 }
