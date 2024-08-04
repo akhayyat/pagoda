@@ -2,7 +2,7 @@ package form
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/mikestefanello/pagoda/pkg/context"
+	"github.com/mikestefanello/pagoda/pkg/ctxext"
 )
 
 // Form represents a form that can be submitted and validated
@@ -37,7 +37,7 @@ type Form interface {
 
 // Get gets a form from the context or initializes a new copy if one is not set
 func Get[T any](ctx echo.Context) *T {
-	if v := ctx.Get(context.FormKey); v != nil {
+	if v := ctx.Get(ctxext.FormKey); v != nil {
 		return v.(*T)
 	}
 	var v T
@@ -46,7 +46,7 @@ func Get[T any](ctx echo.Context) *T {
 
 // Clear removes the form set in the context
 func Clear(ctx echo.Context) {
-	ctx.Set(context.FormKey, nil)
+	ctx.Set(ctxext.FormKey, nil)
 }
 
 // Submit submits a form

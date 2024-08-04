@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/mikestefanello/pagoda/ent"
-	"github.com/mikestefanello/pagoda/pkg/context"
+	"github.com/mikestefanello/pagoda/pkg/ctxext"
 	"github.com/mikestefanello/pagoda/pkg/htmx"
 	"github.com/mikestefanello/pagoda/pkg/msg"
 	"github.com/mikestefanello/pagoda/templates"
@@ -140,7 +140,7 @@ func New(ctx echo.Context) Page {
 		p.CSRF = csrf.(string)
 	}
 
-	if u := ctx.Get(context.AuthenticatedUserKey); u != nil {
+	if u := ctx.Get(ctxext.AuthUserKey); u != nil {
 		p.IsAuth = true
 		p.AuthUser = u.(*ent.User)
 	}

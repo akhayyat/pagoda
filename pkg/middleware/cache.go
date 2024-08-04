@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mikestefanello/pagoda/pkg/context"
 	"github.com/mikestefanello/pagoda/pkg/log"
+	"github.com/mikestefanello/pagoda/pkg/ctxext"
 	"github.com/mikestefanello/pagoda/pkg/services"
 
 	"github.com/labstack/echo/v4"
@@ -25,7 +25,7 @@ func ServeCachedPage(t *services.TemplateRenderer) echo.MiddlewareFunc {
 			}
 
 			// Skip if the user is authenticated
-			if ctx.Get(context.AuthenticatedUserKey) != nil {
+			if ctx.Get(ctxext.AuthUserKey) != nil {
 				return next(ctx)
 			}
 
@@ -35,7 +35,7 @@ func ServeCachedPage(t *services.TemplateRenderer) echo.MiddlewareFunc {
 			if err != nil {
 				switch {
 				case errors.Is(err, services.ErrCacheMiss):
-				case context.IsCanceledError(err):
+				case ctxext.IsCanceledError(err):
 					return nil
 				default:
 					log.Ctx(ctx).Error("failed getting cached page",

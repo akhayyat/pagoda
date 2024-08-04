@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/mikestefanello/pagoda/pkg/context"
 	"github.com/mikestefanello/pagoda/pkg/log"
+	"github.com/mikestefanello/pagoda/pkg/ctxext"
 	"github.com/mikestefanello/pagoda/pkg/page"
 	"github.com/mikestefanello/pagoda/pkg/services"
 	"github.com/mikestefanello/pagoda/templates"
@@ -16,7 +16,7 @@ type Error struct {
 }
 
 func (e *Error) Page(err error, ctx echo.Context) {
-	if ctx.Response().Committed || context.IsCanceledError(err) {
+	if ctx.Response().Committed || ctxext.IsCanceledError(err) {
 		return
 	}
 

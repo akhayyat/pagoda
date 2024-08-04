@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/mikestefanello/pagoda/pkg/context"
+	ctxext "github.com/mikestefanello/pagoda/pkg/ctxext"
 
 	"github.com/labstack/echo/v4"
 )
@@ -24,7 +24,7 @@ func (f *Submission) Submit(ctx echo.Context, form any) error {
 	f.isSubmitted = true
 
 	// Set in context so the form can later be retrieved
-	ctx.Set(context.FormKey, form)
+	ctx.Set(ctxext.FormKey, form)
 
 	// Bind the values from the incoming request to the form struct
 	if err := ctx.Bind(form); err != nil {

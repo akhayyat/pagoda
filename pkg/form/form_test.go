@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v4"
-	"github.com/mikestefanello/pagoda/pkg/context"
+	"github.com/mikestefanello/pagoda/pkg/ctxext"
 	"github.com/mikestefanello/pagoda/pkg/tests"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -47,7 +47,7 @@ func TestGetClear(t *testing.T) {
 			Name: "test",
 		}
 		ctx, _ := tests.NewContext(e, "/")
-		ctx.Set(context.FormKey, &form)
+		ctx.Set(ctxext.FormKey, &form)
 
 		// Get again and expect the values were stored
 		got := Get[example](ctx)

@@ -6,7 +6,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/mikestefanello/pagoda/ent"
-	"github.com/mikestefanello/pagoda/pkg/context"
+	"github.com/mikestefanello/pagoda/pkg/ctxext"
 	"github.com/mikestefanello/pagoda/pkg/msg"
 	"github.com/mikestefanello/pagoda/pkg/tests"
 
@@ -34,7 +34,7 @@ func TestNew(t *testing.T) {
 	usr := &ent.User{
 		ID: 1,
 	}
-	ctx.Set(context.AuthenticatedUserKey, usr)
+	ctx.Set(ctxext.AuthUserKey, usr)
 	ctx.Set(echomw.DefaultCSRFConfig.ContextKey, "csrf")
 	p = New(ctx)
 	assert.Equal(t, "/abc", p.Path)
