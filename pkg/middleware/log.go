@@ -1,73 +1,85 @@
 package middleware
 
 import (
-	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/mikestefanello/pagoda/pkg/log"
+	echomw "github.com/labstack/echo/v4/middleware"
+	"github.com/mikestefanello/pagoda/pkg/ctxext"
+	"github.com/rs/zerolog"
 )
 
-// SetLogger initializes a logger for the current request and stores it in the context.
-// It's recommended to have this executed after Echo's RequestID() middleware because it will add
-// the request ID to the logger so that all log messages produced from this request have the
-// request ID in it. You can modify this code to include any other fields that you want to always
-// appear.
-func SetLogger() echo.MiddlewareFunc {
+func SetLogger(logger zerolog.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
-			// Include the request ID in the logger
+			// Add fields to the logger
 			rID := ctx.Response().Header().Get(echo.HeaderXRequestID)
-			logger := log.Ctx(ctx).With("request_id", rID)
+			logger = logger.With().Str("request_id", rID).Logger()
 
-			// TODO include other fields you may want in all logs for this request
-			log.Set(ctx, logger)
+			// Attach the logger to the context
+			ctx = ctxext.SetLogger(ctx, logger)
 			return next(ctx)
 		}
 	}
 }
 
-// LogRequest logs the current request
-// Echo provides middleware similar to this, but we want to use our own logger
-func LogRequest() echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(ctx echo.Context) (err error) {
-			req := ctx.Request()
-			res := ctx.Response()
-
-			// Track how long the request takes to complete
-			start := time.Now()
-			if err = next(ctx); err != nil {
-				ctx.Error(err)
+func LogRequest(logger zerolog.Logger) echo.MiddlewareFunc {
+	return echomw.RequestLoggerWithConfig(echomw.RequestLoggerConfig{
+		LogRequestID:     true,
+		LogRemoteIP:      true,
+		LogHost:          true,
+		LogMethod:        true,
+		LogURI:           true,
+		LogReferer:       true,
+		LogProtocol:      true,
+		LogStatus:        true,
+		LogLatency:       true,
+		LogContentLength: true,
+		LogResponseSize:  true,
+		LogUserAgent:     true,
+		LogError:         true,
+		LogValuesFunc: func(ctx echo.Context, v echomw.RequestLoggerValues) error {
+			// Log level
+			var level zerolog.Level
+			switch {
+			case v.Status >= 500:
+				level = zerolog.ErrorLevel
+			case v.Status >= 400:
+				level = zerolog.WarnLevel
+			default:
+				level = zerolog.InfoLevel
 			}
-			stop := time.Now()
 
-			sub := log.Ctx(ctx).With(
-				"ip", ctx.RealIP(),
-				"host", req.Host,
-				"referer", req.Referer(),
-				"status", res.Status,
-				"bytes_in", func() string {
-					cl := req.Header.Get(echo.HeaderContentLength)
-					if cl == "" {
-						cl = "0"
-					}
-					return cl
-				}(),
-				"bytes_out", strconv.FormatInt(res.Size, 10),
-				"latency", stop.Sub(start).String(),
-			)
-
-			msg := fmt.Sprintf("%s %s", req.Method, req.URL.RequestURI())
-
-			if res.Status >= 500 {
-				sub.Error(msg)
-			} else {
-				sub.Info(msg)
+			// User
+			userID := ""
+			oryID := ""
+			if user, ok := ctxext.GetAuthUser(ctx); ok {
+				userID = strconv.Itoa(user.ID)
 			}
+			if ory, ok := ctxext.GetOryIdentity(ctx); ok {
+				oryID = ory.GetOryID().String()
+			}
+
+			logger.WithLevel(level).
+				Str("request_id", v.RequestID).
+				Str("remote_ip", v.RemoteIP).
+				Str("host", v.Host).
+				Str("method", v.Method).
+				Str("uri", v.URI).
+				Str("referer", v.Referer).
+				Str("protocol", v.Protocol).
+				Int("status", v.Status).
+				Dur("latency", v.Latency).
+				Str("latency_human", v.Latency.String()).
+				Str("request_size", v.ContentLength).
+				Int64("response_size", v.ResponseSize).
+				Str("user_agent", v.UserAgent).
+				Str("user", userID).
+				Str("ory_id", oryID).
+				Err(v.Error).
+				Msg("request")
 
 			return nil
-		}
-	}
+		},
+	})
 }

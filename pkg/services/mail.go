@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/mikestefanello/pagoda/config"
-	"github.com/mikestefanello/pagoda/pkg/log"
+	"github.com/mikestefanello/pagoda/pkg/ctxext"
 
 	"github.com/labstack/echo/v4"
 )
@@ -85,9 +85,7 @@ func (m *MailClient) send(email *mail, ctx echo.Context) error {
 
 	// Check if mail sending should be skipped
 	if m.skipSend() {
-		log.Ctx(ctx).Debug("skipping email delivery",
-			"to", email.to,
-		)
+		ctxext.Logger(ctx).Debug().Str("to", email.to).Msg("skipping email delivery")
 		return nil
 	}
 

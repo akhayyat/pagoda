@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -22,13 +21,13 @@ func main() {
 	c := services.NewContainer()
 	defer func() {
 		if err := c.Shutdown(); err != nil {
-			log.Fatal(err)
+			c.Logger.Fatal().Err(err).Msg("")
 		}
 	}()
 
 	// Build the router
 	if err := handlers.BuildRouter(c); err != nil {
-		log.Fatalf("failed to build the router: %v", err)
+		c.Logger.Fatal().Err(err).Msg("failed to build the router")
 	}
 
 	// Start the server
@@ -44,7 +43,7 @@ func main() {
 		if c.Config.HTTP.TLS.Enabled {
 			certs, err := tls.LoadX509KeyPair(c.Config.HTTP.TLS.Certificate, c.Config.HTTP.TLS.Key)
 			if err != nil {
-				log.Fatalf("cannot load TLS certificate: %v", err)
+				c.Logger.Fatal().Err(err).Msg("cannot load TLS certificate")
 			}
 
 			srv.TLSConfig = &tls.Config{
@@ -53,7 +52,7 @@ func main() {
 		}
 
 		if err := c.Web.StartServer(&srv); errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("shutting down the server: %v", err)
+			c.Logger.Fatal().Err(err).Msg("shutting down the server")
 		}
 	}()
 
@@ -84,7 +83,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		if err := c.Web.Shutdown(ctx); err != nil {
-			log.Fatal(err)
+			c.Logger.Fatal().Err(err).Msg("")
 		}
 	}()
 

@@ -11,8 +11,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/mikestefanello/pagoda/config"
-	"github.com/mikestefanello/pagoda/pkg/context"
-	"github.com/mikestefanello/pagoda/pkg/log"
+	"github.com/mikestefanello/pagoda/pkg/ctxext"
 	"github.com/mikestefanello/pagoda/pkg/page"
 	"github.com/mikestefanello/pagoda/templates"
 )
@@ -203,11 +202,9 @@ func (t *TemplateRenderer) cachePage(ctx echo.Context, page page.Page, html *byt
 
 	switch {
 	case err == nil:
-		log.Ctx(ctx).Debug("cached page")
-	case !context.IsCanceledError(err):
-		log.Ctx(ctx).Error("failed to cache page",
-			"error", err,
-		)
+		ctxext.Logger(ctx).Debug().Msg("cached page")
+	case !ctxext.IsCanceledError(err):
+		ctxext.Logger(ctx).Error().Err(err).Msg("failed to cache page")
 	}
 }
 

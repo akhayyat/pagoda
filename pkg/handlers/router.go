@@ -33,14 +33,14 @@ func BuildRouter(c *services.Container) error {
 		echomw.Recover(),
 		echomw.Secure(),
 		echomw.RequestID(),
-		middleware.SetLogger(),
-		middleware.LogRequest(),
+		middleware.SetLogger(c.Logger),
+		middleware.LoadAuthenticatedUser(c.Auth),
 		echomw.Gzip(),
+		middleware.LogRequest(c.Logger),
 		echomw.TimeoutWithConfig(echomw.TimeoutConfig{
 			Timeout: c.Config.App.Timeout,
 		}),
 		middleware.Session(sessions.NewCookieStore([]byte(c.Config.App.EncryptionKey))),
-		middleware.LoadAuthenticatedUser(c.Auth),
 		middleware.ServeCachedPage(c.TemplateRenderer),
 		echomw.CSRFWithConfig(echomw.CSRFConfig{
 			TokenLookup: "form:csrf",

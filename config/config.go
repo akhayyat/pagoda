@@ -80,6 +80,7 @@ type (
 		Name          string
 		Environment   environment
 		EncryptionKey string
+		LogLevel      string
 		Timeout       time.Duration
 		PasswordToken struct {
 			Expiration time.Duration

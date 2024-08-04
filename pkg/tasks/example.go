@@ -2,10 +2,10 @@ package tasks
 
 import (
 	"context"
-	"github.com/mikestefanello/backlite"
 	"time"
 
-	"github.com/mikestefanello/pagoda/pkg/log"
+	"github.com/mikestefanello/backlite"
+
 	"github.com/mikestefanello/pagoda/pkg/services"
 )
 
@@ -40,12 +40,7 @@ func (t ExampleTask) Config() backlite.QueueConfig {
 // Whenever an ExampleTask is added to the task client, it will be queued and eventually sent here for execution.
 func NewExampleTaskQueue(c *services.Container) backlite.Queue {
 	return backlite.NewQueue[ExampleTask](func(ctx context.Context, task ExampleTask) error {
-		log.Default().Info("Example task received",
-			"message", task.Message,
-		)
-		log.Default().Info("This can access the container for dependencies",
-			"echo", c.Web.Reverse("home"),
-		)
+		c.Logger.Info().Str("message", task.Message).Msg("Example task received")
 		return nil
 	})
 }

@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mikestefanello/pagoda/pkg/log"
 	"github.com/mikestefanello/pagoda/pkg/ctxext"
 	"github.com/mikestefanello/pagoda/pkg/services"
 
@@ -38,9 +37,7 @@ func ServeCachedPage(t *services.TemplateRenderer) echo.MiddlewareFunc {
 				case ctxext.IsCanceledError(err):
 					return nil
 				default:
-					log.Ctx(ctx).Error("failed getting cached page",
-						"error", err,
-					)
+					ctxext.Logger(ctx).Error().Err(err).Msg("failed getting cached page")
 				}
 
 				return next(ctx)
@@ -53,7 +50,7 @@ func ServeCachedPage(t *services.TemplateRenderer) echo.MiddlewareFunc {
 				}
 			}
 
-			log.Ctx(ctx).Debug("serving cached page")
+			ctxext.Logger(ctx).Debug().Msg("serving cached page")
 
 			return ctx.HTMLBlob(page.StatusCode, page.HTML)
 		}
