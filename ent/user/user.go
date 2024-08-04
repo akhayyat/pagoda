@@ -3,11 +3,10 @@
 package user
 
 import (
+	"fmt"
 	"time"
 
-	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -15,37 +14,28 @@ const (
 	Label = "user"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldName holds the string denoting the name field in the database.
-	FieldName = "name"
-	// FieldEmail holds the string denoting the email field in the database.
-	FieldEmail = "email"
-	// FieldPassword holds the string denoting the password field in the database.
-	FieldPassword = "password"
-	// FieldVerified holds the string denoting the verified field in the database.
-	FieldVerified = "verified"
-	// FieldCreatedAt holds the string denoting the created_at field in the database.
-	FieldCreatedAt = "created_at"
-	// EdgeOwner holds the string denoting the owner edge name in mutations.
-	EdgeOwner = "owner"
+	// FieldCreateTime holds the string denoting the create_time field in the database.
+	FieldCreateTime = "create_time"
+	// FieldUpdateTime holds the string denoting the update_time field in the database.
+	FieldUpdateTime = "update_time"
+	// FieldOryID holds the string denoting the ory_id field in the database.
+	FieldOryID = "ory_id"
+	// FieldUILanguage holds the string denoting the ui_language field in the database.
+	FieldUILanguage = "ui_language"
+	// FieldAdmin holds the string denoting the admin field in the database.
+	FieldAdmin = "admin"
 	// Table holds the table name of the user in the database.
 	Table = "users"
-	// OwnerTable is the table that holds the owner relation/edge.
-	OwnerTable = "password_tokens"
-	// OwnerInverseTable is the table name for the PasswordToken entity.
-	// It exists in this package in order to avoid circular dependency with the "passwordtoken" package.
-	OwnerInverseTable = "password_tokens"
-	// OwnerColumn is the table column denoting the owner relation/edge.
-	OwnerColumn = "password_token_user"
 )
 
 // Columns holds all SQL columns for user fields.
 var Columns = []string{
 	FieldID,
-	FieldName,
-	FieldEmail,
-	FieldPassword,
-	FieldVerified,
-	FieldCreatedAt,
+	FieldCreateTime,
+	FieldUpdateTime,
+	FieldOryID,
+	FieldUILanguage,
+	FieldAdmin,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -58,24 +48,39 @@ func ValidColumn(column string) bool {
 	return false
 }
 
-// Note that the variables below are initialized by the runtime
-// package on the initialization of the application. Therefore,
-// it should be imported in the main as follows:
-//
-//	import _ "github.com/mikestefanello/pagoda/ent/runtime"
 var (
-	Hooks [1]ent.Hook
-	// NameValidator is a validator for the "name" field. It is called by the builders before save.
-	NameValidator func(string) error
-	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
-	EmailValidator func(string) error
-	// PasswordValidator is a validator for the "password" field. It is called by the builders before save.
-	PasswordValidator func(string) error
-	// DefaultVerified holds the default value on creation for the "verified" field.
-	DefaultVerified bool
-	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
-	DefaultCreatedAt func() time.Time
+	// DefaultCreateTime holds the default value on creation for the "create_time" field.
+	DefaultCreateTime func() time.Time
+	// DefaultUpdateTime holds the default value on creation for the "update_time" field.
+	DefaultUpdateTime func() time.Time
+	// UpdateDefaultUpdateTime holds the default value on update for the "update_time" field.
+	UpdateDefaultUpdateTime func() time.Time
+	// DefaultAdmin holds the default value on creation for the "admin" field.
+	DefaultAdmin bool
 )
+
+// UILanguage defines the type for the "ui_language" enum field.
+type UILanguage string
+
+// UILanguage values.
+const (
+	UILanguageAr UILanguage = "ar"
+	UILanguageEn UILanguage = "en"
+)
+
+func (ul UILanguage) String() string {
+	return string(ul)
+}
+
+// UILanguageValidator is a validator for the "ui_language" field enum values. It is called by the builders before save.
+func UILanguageValidator(ul UILanguage) error {
+	switch ul {
+	case UILanguageAr, UILanguageEn:
+		return nil
+	default:
+		return fmt.Errorf("user: invalid enum value for ui_language field: %q", ul)
+	}
+}
 
 // OrderOption defines the ordering options for the User queries.
 type OrderOption func(*sql.Selector)
@@ -85,48 +90,27 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// ByName orders the results by the name field.
-func ByName(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldName, opts...).ToFunc()
+// ByCreateTime orders the results by the create_time field.
+func ByCreateTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreateTime, opts...).ToFunc()
 }
 
-// ByEmail orders the results by the email field.
-func ByEmail(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldEmail, opts...).ToFunc()
+// ByUpdateTime orders the results by the update_time field.
+func ByUpdateTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdateTime, opts...).ToFunc()
 }
 
-// ByPassword orders the results by the password field.
-func ByPassword(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldPassword, opts...).ToFunc()
+// ByOryID orders the results by the ory_id field.
+func ByOryID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOryID, opts...).ToFunc()
 }
 
-// ByVerified orders the results by the verified field.
-func ByVerified(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldVerified, opts...).ToFunc()
+// ByUILanguage orders the results by the ui_language field.
+func ByUILanguage(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUILanguage, opts...).ToFunc()
 }
 
-// ByCreatedAt orders the results by the created_at field.
-func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
-}
-
-// ByOwnerCount orders the results by owner count.
-func ByOwnerCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newOwnerStep(), opts...)
-	}
-}
-
-// ByOwner orders the results by owner terms.
-func ByOwner(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newOwnerStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-func newOwnerStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(OwnerInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, true, OwnerTable, OwnerColumn),
-	)
+// ByAdmin orders the results by the admin field.
+func ByAdmin(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAdmin, opts...).ToFunc()
 }
