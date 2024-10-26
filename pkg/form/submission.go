@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
-	ctxext "github.com/mikestefanello/pagoda/pkg/ctxext"
+	"github.com/mikestefanello/pagoda/pkg/ctxext"
 
 	"github.com/labstack/echo/v4"
 )
